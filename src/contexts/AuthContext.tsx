@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = "student" | "educator" | "administrator";
 
@@ -24,66 +25,106 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration
-const MOCK_USERS: User[] = [
-  {
-    id: "1",
-    username: "admin",
-    email: "admin@waypoint.com",
-    role: "administrator",
-    firstName: "Admin",
-    lastName: "User"
-  },
-  {
-    id: "2",
-    username: "teacher",
-    email: "teacher@waypoint.com",
-    role: "educator",
-    firstName: "Teacher",
-    lastName: "Example"
-  },
-  {
-    id: "3",
-    username: "student",
-    email: "student@waypoint.com",
-    role: "student",
-    firstName: "Student",
-    lastName: "Example"
-  }
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load user from localStorage on initial render
+  // Load user session and set up auth state change listener
   useEffect(() => {
-    const storedUser = localStorage.getItem("waypoint_user");
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setIsLoading(true);
+        
+        if (session?.user) {
+          try {
+            // Get user profile data
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profileError) throw profileError;
+            
+            if (profile) {
+              const userData: User = {
+                id: session.user.id,
+                username: profile.username || '',
+                email: session.user.email || '',
+                role: profile.role as UserRole,
+                firstName: profile.first_name || undefined,
+                lastName: profile.last_name || undefined
+              };
+              
+              setCurrentUser(userData);
+            }
+          } catch (err) {
+            console.error("Error fetching user profile:", err);
+          }
+        } else {
+          setCurrentUser(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Get initial session
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        try {
+          // Get user profile data
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileError) throw profileError;
+          
+          if (profile) {
+            const userData: User = {
+              id: session.user.id,
+              username: profile.username || '',
+              email: session.user.email || '',
+              role: profile.role as UserRole,
+              firstName: profile.first_name || undefined,
+              lastName: profile.last_name || undefined
+            };
+            
+            setCurrentUser(userData);
+          }
+        } catch (err) {
+          console.error("Error fetching user profile:", err);
+        }
+      }
+      
+      setIsLoading(false);
+    };
+
+    initializeAuth();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Simulated login function
+  // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      // Find user with matching email
-      const user = MOCK_USERS.find(u => u.email === email);
-      
-      if (user && password === "password") { // Simple mock password check
-        setCurrentUser(user);
-        localStorage.setItem("waypoint_user", JSON.stringify(user));
-      } else {
-        throw new Error("Invalid email or password");
-      }
+      if (error) throw error;
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -96,33 +137,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Simulated register function
+  // Register function
   const register = async (username: string, email: string, password: string, role: UserRole) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check if user already exists
-      if (MOCK_USERS.some(u => u.email === email)) {
-        throw new Error("User with this email already exists");
-      }
-      
-      // Create new user
-      const newUser: User = {
-        id: (MOCK_USERS.length + 1).toString(),
-        username,
+      const { error } = await supabase.auth.signUp({
         email,
-        role
-      };
+        password,
+        options: {
+          data: {
+            username,
+            role
+          }
+        }
+      });
       
-      // In a real app, we would send this to the server
-      // For demo, we'll just add to our mock users and log in
-      MOCK_USERS.push(newUser);
-      setCurrentUser(newUser);
-      localStorage.setItem("waypoint_user", JSON.stringify(newUser));
+      if (error) throw error;
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -136,9 +168,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Logout function
-  const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem("waypoint_user");
+  const logout = async () => {
+    setIsLoading(true);
+    
+    try {
+      await supabase.auth.signOut();
+      setCurrentUser(null);
+    } catch (err) {
+      console.error("Error signing out:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Update user profile
@@ -147,16 +187,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
       if (!currentUser) {
         throw new Error("No user is currently logged in");
       }
       
-      const updatedUser = { ...currentUser, ...userData };
-      setCurrentUser(updatedUser);
-      localStorage.setItem("waypoint_user", JSON.stringify(updatedUser));
+      // Prepare profile data
+      const profileData: Record<string, any> = {};
+      if (userData.username) profileData.username = userData.username;
+      if (userData.firstName) profileData.first_name = userData.firstName;
+      if (userData.lastName) profileData.last_name = userData.lastName;
+      if (userData.role) profileData.role = userData.role;
+      
+      // Update profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', currentUser.id);
+      
+      if (error) throw error;
+      
+      // Update local user state
+      setCurrentUser(prev => {
+        if (!prev) return null;
+        return { ...prev, ...userData };
+      });
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
