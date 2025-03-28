@@ -1,9 +1,9 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import { 
   ArrowRight, 
   Award, 
@@ -279,6 +279,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+      
+      {/* Testimonials Section */}
+      <TestimonialsSection />
       
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-waypoint-light-blue/20">
