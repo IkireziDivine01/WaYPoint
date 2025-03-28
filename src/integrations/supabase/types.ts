@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assessment_questions: {
+        Row: {
+          category: string | null
+          created_at: string
+          creator_id: string
+          id: string
+          options: Json
+          question_text: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          creator_id: string
+          id?: string
+          options: Json
+          question_text: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          creator_id?: string
+          id?: string
+          options?: Json
+          question_text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      assessment_templates: {
+        Row: {
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          published: boolean
+          question_ids: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          published?: boolean
+          question_ids: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          published?: boolean
+          question_ids?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assessments: {
         Row: {
           assessment_type: string
@@ -17,6 +80,7 @@ export type Database = {
           id: string
           responses: Json
           results: Json | null
+          template_id: string | null
           user_id: string
         }
         Insert: {
@@ -26,6 +90,7 @@ export type Database = {
           id?: string
           responses: Json
           results?: Json | null
+          template_id?: string | null
           user_id: string
         }
         Update: {
@@ -35,9 +100,18 @@ export type Database = {
           id?: string
           responses?: Json
           results?: Json | null
+          template_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "assessments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       career_matches: {
         Row: {
