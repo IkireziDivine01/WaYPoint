@@ -1,21 +1,13 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BadgeCheck, Loader } from "lucide-react";
-
-interface Privilege {
-  id: string;
-  role: string;
-  privilege_name: string;
-  privilege_description: string;
-  active: boolean;
-}
+import { RolePrivilege } from "@/types/supabase-extensions";
 
 const UserPrivileges = () => {
   const { currentUser } = useAuth();
-  const [privileges, setPrivileges] = useState<Privilege[]>([]);
+  const [privileges, setPrivileges] = useState<RolePrivilege[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -24,8 +16,6 @@ const UserPrivileges = () => {
       
       setIsLoading(true);
       try {
-        // Use the raw query method to access the role_privileges table
-        // that isn't yet in the TypeScript definitions
         const { data, error } = await supabase
           .from('role_privileges')
           .select('*')
@@ -34,8 +24,7 @@ const UserPrivileges = () => {
           
         if (error) throw error;
         
-        // Explicitly cast the data to our Privilege interface
-        setPrivileges(data as unknown as Privilege[]);
+        setPrivileges(data || []);
       } catch (error) {
         console.error("Error fetching privileges:", error);
       } finally {
