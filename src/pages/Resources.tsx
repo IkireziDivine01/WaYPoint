@@ -12,6 +12,7 @@ import AssessmentQuestionForm from "@/components/educator/AssessmentQuestionForm
 import AssessmentTemplateForm from "@/components/educator/AssessmentTemplateForm";
 import QuestionsList from "@/components/educator/QuestionsList";
 import TemplatesList from "@/components/educator/TemplatesList";
+import UserPrivileges from "@/components/user/UserPrivileges";
 
 const Resources = () => {
   const { currentUser, isLoading } = useAuth();
@@ -39,7 +40,9 @@ const Resources = () => {
 
     if (role === "student") {
       return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <UserPrivileges />
+          
           <Card>
             <CardHeader>
               <CardTitle>Student Resources</CardTitle>
@@ -61,6 +64,10 @@ const Resources = () => {
     } else if (role === "educator") {
       return (
         <div className="max-w-6xl mx-auto">
+          <div className="mb-8">
+            <UserPrivileges />
+          </div>
+          
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="questions">Assessment Questions</TabsTrigger>
@@ -132,6 +139,10 @@ const Resources = () => {
     } else if (role === "administrator") {
       return (
         <div className="max-w-6xl mx-auto">
+          <div className="mb-8">
+            <UserPrivileges />
+          </div>
+          
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="questions">All Questions</TabsTrigger>

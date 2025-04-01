@@ -184,6 +184,36 @@ export type Database = {
         }
         Relationships: []
       }
+      role_privileges: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          privilege_description: string
+          privilege_name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          privilege_description: string
+          privilege_name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          privilege_description?: string
+          privilege_name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -192,7 +222,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "student" | "educator" | "administrator"
     }
     CompositeTypes: {
       [_ in never]: never
