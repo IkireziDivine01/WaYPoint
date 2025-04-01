@@ -24,6 +24,8 @@ const UserPrivileges = () => {
       
       setIsLoading(true);
       try {
+        // Use the raw query method to access the role_privileges table
+        // that isn't yet in the TypeScript definitions
         const { data, error } = await supabase
           .from('role_privileges')
           .select('*')
@@ -32,7 +34,8 @@ const UserPrivileges = () => {
           
         if (error) throw error;
         
-        setPrivileges(data || []);
+        // Explicitly cast the data to our Privilege interface
+        setPrivileges(data as unknown as Privilege[]);
       } catch (error) {
         console.error("Error fetching privileges:", error);
       } finally {
