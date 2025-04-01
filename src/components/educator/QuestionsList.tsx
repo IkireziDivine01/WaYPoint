@@ -55,7 +55,16 @@ const QuestionsList: React.FC<QuestionsListProps> = ({ isAdmin = false }) => {
 
       if (error) throw error;
       
-      setQuestions(data || []);
+      // Transform the data to match our Question interface
+      const transformedData = data ? data.map(item => ({
+        id: item.id,
+        question_text: item.question_text,
+        category: item.category || "",
+        options: Array.isArray(item.options) ? item.options : [],
+        created_at: item.created_at
+      })) : [];
+      
+      setQuestions(transformedData);
     } catch (error) {
       console.error("Error fetching questions:", error);
       toast.error("Failed to load questions");
