@@ -56,11 +56,17 @@ const QuestionsList: React.FC<QuestionsListProps> = ({ isAdmin = false }) => {
       if (error) throw error;
       
       // Transform the data to match our Question interface
-      const transformedData = data ? data.map(item => ({
+      const transformedData: Question[] = data ? data.map(item => ({
         id: item.id,
         question_text: item.question_text,
         category: item.category || "",
-        options: Array.isArray(item.options) ? item.options : [],
+        // Ensure options is properly typed as an array of {text, isCorrect} objects
+        options: Array.isArray(item.options) 
+          ? item.options.map((opt: any) => ({
+              text: typeof opt.text === 'string' ? opt.text : String(opt.text || ''),
+              isCorrect: Boolean(opt.isCorrect)
+            }))
+          : [],
         created_at: item.created_at
       })) : [];
       
