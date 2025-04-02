@@ -11,7 +11,7 @@ import { Eye, EyeOff, Loader } from "lucide-react";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
-  const { register, isLoading } = useAuth();
+  const { register, isLoading: authLoading } = useAuth();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,39 +19,51 @@ const RegisterForm = () => {
   const [role, setRole] = useState<UserRole>("student");
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
+    setIsSubmitting(true);
     
     // Simple validation
     if (!username.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       setFormError("All fields are required");
+      setIsSubmitting(false);
       return;
     }
     
     if (password !== confirmPassword) {
       setFormError("Passwords do not match");
+      setIsSubmitting(false);
       return;
     }
     
     if (password.length < 8) {
       setFormError("Password must be at least 8 characters long");
+      setIsSubmitting(false);
       return;
     }
     
     try {
       await register(username, email, password, role);
-      toast.success("Account created successfully");
+      toast.success("Account created successfully! Please check your email to confirm your account.");
       navigate("/dashboard");
-    } catch (error) {
-      if (error instanceof Error) {
+    } catch (error: any) {
+      // Handle specific errors
+      if (error?.message?.includes("already registered")) {
+        setFormError("This email is already registered. Please use a different email or try logging in.");
+      } else if (error instanceof Error) {
         setFormError(error.message);
       } else {
         setFormError("An unexpected error occurred. Please try again.");
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const buttonIsLoading = isSubmitting || authLoading;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md">
@@ -65,6 +77,7 @@ const RegisterForm = () => {
           onChange={(e) => setUsername(e.target.value)}
           className="h-12"
           required
+          disabled={buttonIsLoading}
         />
       </div>
       
@@ -79,6 +92,7 @@ const RegisterForm = () => {
           className="h-12"
           autoComplete="email"
           required
+          disabled={buttonIsLoading}
         />
       </div>
       
@@ -94,12 +108,14 @@ const RegisterForm = () => {
             className="h-12 pr-10"
             autoComplete="new-password"
             required
+            disabled={buttonIsLoading}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-waypoint-gray hover:text-waypoint-blue"
             tabIndex={-1}
+            disabled={buttonIsLoading}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
@@ -120,6 +136,7 @@ const RegisterForm = () => {
           className="h-12"
           autoComplete="new-password"
           required
+          disabled={buttonIsLoading}
         />
       </div>
       
@@ -131,15 +148,15 @@ const RegisterForm = () => {
           className="flex space-x-6"
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="student" id="student" />
+            <RadioGroupItem value="student" id="student" disabled={buttonIsLoading} />
             <Label htmlFor="student" className="cursor-pointer">Student</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="educator" id="educator" />
+            <RadioGroupItem value="educator" id="educator" disabled={buttonIsLoading} />
             <Label htmlFor="educator" className="cursor-pointer">Educator</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="administrator" id="administrator" />
+            <RadioGroupItem value="administrator" id="administrator" disabled={buttonIsLoading} />
             <Label htmlFor="administrator" className="cursor-pointer">Administrator</Label>
           </div>
         </RadioGroup>
@@ -154,9 +171,9 @@ const RegisterForm = () => {
       <Button 
         type="submit" 
         className="w-full h-12 text-base btn-primary"
-        disabled={isLoading}
+        disabled={buttonIsLoading}
       >
-        {isLoading ? (
+        {buttonIsLoading ? (
           <div className="flex items-center space-x-2">
             <Loader size={18} className="animate-spin" />
             <span>Creating account...</span>

@@ -1,3 +1,4 @@
+
 // src/types/supabase-extensions.ts
 
 import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
@@ -16,7 +17,7 @@ export interface RolePrivilege {
   updated_at: string;
 }
 
-// Use declaration merging to extend the existing Database type
+// Use declaration merging to extend the existing Database interface
 declare module '@/integrations/supabase/types' {
   interface Database {
     public: {

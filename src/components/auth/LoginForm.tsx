@@ -24,7 +24,7 @@ const LoginForm = () => {
     
     // Simple validation
     if (!email.trim() || !password.trim()) {
-      setFormError("All fields are required");
+      setFormError("Email and password are required");
       setIsSubmitting(false);
       return;
     }
@@ -33,18 +33,24 @@ const LoginForm = () => {
       await login(email, password);
       toast.success("Successfully logged in");
       navigate("/dashboard");
-    } catch (error) {
-      if (error instanceof Error) {
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error?.message?.includes("Email not confirmed")) {
+        setFormError("Please check your email to confirm your account before logging in.");
+      } else if (error?.message?.includes("Invalid login credentials")) {
+        setFormError("Invalid email or password. Please try again.");
+      } else if (error instanceof Error) {
         setFormError(error.message);
       } else {
         setFormError("An unexpected error occurred. Please try again.");
       }
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Use local isSubmitting state to control button loading state
-  const buttonIsLoading = isSubmitting;
+  // Use both local isSubmitting state and global authLoading state
+  const buttonIsLoading = isSubmitting || authLoading;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md">
@@ -59,6 +65,7 @@ const LoginForm = () => {
           className="h-12"
           autoComplete="email"
           required
+          disabled={buttonIsLoading}
         />
       </div>
       
@@ -68,6 +75,7 @@ const LoginForm = () => {
           <Link 
             to="/forgot-password" 
             className="text-sm text-waypoint-blue hover:underline"
+            tabIndex={buttonIsLoading ? -1 : 0}
           >
             Forgot Password?
           </Link>
@@ -82,12 +90,14 @@ const LoginForm = () => {
             className="h-12 pr-10"
             autoComplete="current-password"
             required
+            disabled={buttonIsLoading}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-waypoint-gray hover:text-waypoint-blue"
             tabIndex={-1}
+            disabled={buttonIsLoading}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
