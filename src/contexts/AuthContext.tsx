@@ -1,17 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-export type UserRole = "student" | "educator" | "administrator";
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  role: UserRole;
-  firstName?: string;
-  lastName?: string;
-}
+import { User as AuthUser } from "@supabase/supabase-js";
+import { User, UserRole } from "@/types/app";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -233,3 +224,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export { type User, type UserRole };
