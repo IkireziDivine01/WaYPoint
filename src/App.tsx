@@ -17,7 +17,8 @@ import Courses from "./pages/Courses";
 import Mentors from "./pages/Mentors";
 import Forums from "./pages/Forums";
 import Resources from "./pages/Resources";
-import Blog from "./pages/Blog"; // Add new Blog page
+import Blog from "./pages/Blog";
+import Learning from "./pages/Learning"; // Import the new Learning page
 
 const queryClient = new QueryClient();
 
@@ -39,7 +40,8 @@ const App = () => (
             <Route path="/mentors" element={<Mentors />} />
             <Route path="/forums" element={<Forums />} />
             <Route path="/resources" element={<Resources />} />
-            <Route path="/blog" element={<Blog />} /> {/* Add Blog route */}
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/learning" element={<Learning />} /> {/* Add Learning route */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

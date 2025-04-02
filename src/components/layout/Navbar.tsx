@@ -1,237 +1,230 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Menu, X, User, LogIn, LogOut, BookOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Menu, 
-  X, 
-  User, 
-  LogOut, 
-  ChevronDown 
-} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useMobileScreen } from "@/hooks/use-mobile";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const Navbar = () => {
-  const { currentUser, logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { currentUser, signOut } = useAuth();
+  const { isMobile } = useMobileScreen();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
-  // Close menu when location changes
-  useEffect(() => {
-    setIsMenuOpen(false);
-    setIsProfileOpen(false);
-  }, [location.pathname]);
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const toggleProfile = () => setIsProfileOpen(!isProfileOpen);
+  const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Assessment", path: "/assessment" },
+    { name: "Courses", path: "/courses" },
+    { name: "Learning", path: "/learning" }, // Add Learning link
+    { name: "Blog", path: "/blog" }, // Add Blog link
+  ];
+
+  // Filter dashboard link if user is not logged in
+  const visibleLinks = currentUser
+    ? navLinks
+    : navLinks.filter((link) => link.name !== "Dashboard");
+
+  // Get first letter of user's name for avatar fallback
+  const getInitials = () => {
+    if (currentUser?.username) {
+      return currentUser.username.charAt(0).toUpperCase();
+    }
+    return "U";
+  };
 
   return (
-    <nav 
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center">
-            <Link 
-              to="/" 
-              className="text-2xl font-medium text-waypoint-black flex items-center"
-            >
-              <span className="text-waypoint-blue">WaY</span>
-              <span>Point</span>
-            </Link>
-          </div>
+    <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur-sm">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
+        <Link to="/" className="flex items-center">
+          <span className="text-2xl font-bold">
+            <span className="text-waypoint-blue">WaY</span>Point
+          </span>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/" 
-              className={`font-medium transition-colors ${
-                location.pathname === "/" 
-                  ? "text-waypoint-blue" 
-                  : "text-waypoint-black hover:text-waypoint-blue"
-              }`}
-            >
-              Home
-            </Link>
-            
-            {currentUser && (
-              <Link 
-                to="/dashboard" 
-                className={`font-medium transition-colors ${
-                  location.pathname === "/dashboard" 
-                    ? "text-waypoint-blue" 
-                    : "text-waypoint-black hover:text-waypoint-blue"
-                }`}
-              >
-                Dashboard
-              </Link>
+        {/* Desktop Navigation */}
+        {!isMobile && (
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+              {visibleLinks.map((link) => (
+                <NavigationMenuItem key={link.name}>
+                  <Link to={link.path} legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                      active={location.pathname === link.path}
+                    >
+                      {link.name}
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
+        )}
+
+        {/* Mobile Navigation Toggle */}
+        {isMobile && (
+          <button
+            className="md:hidden"
+            onClick={toggleMobileMenu}
+            aria-label="Toggle Menu"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
             )}
-            
-            {currentUser && (
-              <Link 
-                to="/assessment" 
-                className={`font-medium transition-colors ${
-                  location.pathname === "/assessment" 
-                    ? "text-waypoint-blue" 
-                    : "text-waypoint-black hover:text-waypoint-blue"
-                }`}
+          </button>
+        )}
+
+        {/* User Menu */}
+        <div className="hidden md:flex items-center gap-4">
+          {currentUser ? (
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium">{currentUser.username}</p>
+                <p className="text-xs text-gray-500 capitalize">
+                  {currentUser.role}
+                </p>
+              </div>
+              <Avatar className="h-8 w-8">
+                <AvatarImage
+                  src={currentUser.avatar_url || ""}
+                  alt={currentUser.username}
+                />
+                <AvatarFallback className="bg-waypoint-light-blue text-waypoint-blue">
+                  {getInitials()}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={signOut}
+                className="text-gray-600"
               >
-                Assessment
-              </Link>
-            )}
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" asChild>
+                <Link to="/login">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Sign In
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/register">
+                  <User className="h-4 w-4 mr-2" />
+                  Register
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
 
-            {currentUser ? (
-              <div className="relative">
-                <button
-                  onClick={toggleProfile}
-                  className="flex items-center space-x-2 text-waypoint-black hover:text-waypoint-blue transition-colors focus:outline-none"
-                >
-                  <span className="font-medium">{currentUser.username}</span>
-                  <ChevronDown size={16} className={`transition-transform ${isProfileOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-md rounded-md shadow-lg py-1 z-10 border border-gray-100 animate-fade-in">
-                    <div className="px-4 py-2 text-sm text-waypoint-gray border-b border-gray-100">
-                      Signed in as <span className="font-medium text-waypoint-black">{currentUser.email}</span>
+        {/* Mobile Menu */}
+        {isMobile && mobileMenuOpen && (
+          <div className="absolute top-16 left-0 w-full bg-white border-b shadow-lg md:hidden">
+            <div className="flex flex-col p-4">
+              <nav className="flex flex-col gap-2">
+                {visibleLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    to={link.path}
+                    className={`px-4 py-2 rounded-md ${
+                      location.pathname === link.path
+                        ? "bg-waypoint-light-blue text-waypoint-blue"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                    onClick={closeMobileMenu}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </nav>
+              <div className="mt-4 pt-4 border-t">
+                {currentUser ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3 px-4 py-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage
+                          src={currentUser.avatar_url || ""}
+                          alt={currentUser.username}
+                        />
+                        <AvatarFallback className="bg-waypoint-light-blue text-waypoint-blue">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {currentUser.username}
+                        </p>
+                        <p className="text-xs text-gray-500 capitalize">
+                          {currentUser.role}
+                        </p>
+                      </div>
                     </div>
-                    <Link
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-waypoint-black hover:bg-waypoint-light-blue/50 flex items-center"
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => {
+                        signOut();
+                        closeMobileMenu();
+                      }}
                     >
-                      <User size={16} className="mr-2" />
-                      Your Profile
-                    </Link>
-                    <button
-                      onClick={logout}
-                      className="w-full text-left px-4 py-2 text-sm text-waypoint-black hover:bg-waypoint-light-blue/50 flex items-center"
-                    >
-                      <LogOut size={16} className="mr-2" />
+                      <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
-                    </button>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      asChild
+                      onClick={closeMobileMenu}
+                    >
+                      <Link to="/login">
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Sign In
+                      </Link>
+                    </Button>
+                    <Button
+                      className="justify-start"
+                      asChild
+                      onClick={closeMobileMenu}
+                    >
+                      <Link to="/register">
+                        <User className="h-4 w-4 mr-2" />
+                        Register
+                      </Link>
+                    </Button>
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link to="/login">
-                  <Button variant="outline" className="btn-outline">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button className="btn-primary">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            )}
+            </div>
           </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={toggleMenu}
-              className="text-waypoint-black focus:outline-none"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? (
-                <X size={24} className="animate-fade-in" />
-              ) : (
-                <Menu size={24} className="animate-fade-in" />
-              )}
-            </button>
-          </div>
-        </div>
+        )}
       </div>
-
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-gray-100 animate-slide-up">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link
-              to="/"
-              className={`block px-3 py-2 rounded-md font-medium ${
-                location.pathname === "/"
-                  ? "text-waypoint-blue bg-waypoint-light-blue/30"
-                  : "text-waypoint-black hover:bg-waypoint-light-blue/20"
-              }`}
-            >
-              Home
-            </Link>
-            
-            {currentUser && (
-              <Link
-                to="/dashboard"
-                className={`block px-3 py-2 rounded-md font-medium ${
-                  location.pathname === "/dashboard"
-                    ? "text-waypoint-blue bg-waypoint-light-blue/30"
-                    : "text-waypoint-black hover:bg-waypoint-light-blue/20"
-                }`}
-              >
-                Dashboard
-              </Link>
-            )}
-            
-            {currentUser && (
-              <Link
-                to="/assessment"
-                className={`block px-3 py-2 rounded-md font-medium ${
-                  location.pathname === "/assessment"
-                    ? "text-waypoint-blue bg-waypoint-light-blue/30"
-                    : "text-waypoint-black hover:bg-waypoint-light-blue/20"
-                }`}
-              >
-                Assessment
-              </Link>
-            )}
-            
-            {currentUser ? (
-              <>
-                <Link
-                  to="/profile"
-                  className="block px-3 py-2 rounded-md text-waypoint-black hover:bg-waypoint-light-blue/20 font-medium"
-                >
-                  Your Profile
-                </Link>
-                <button
-                  onClick={logout}
-                  className="w-full text-left px-3 py-2 rounded-md text-waypoint-black hover:bg-waypoint-light-blue/20 font-medium"
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <div className="pt-4 flex flex-col space-y-2">
-                <Link to="/login">
-                  <Button variant="outline" className="w-full btn-outline">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button className="w-full btn-primary">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
+    </header>
   );
 };
 
