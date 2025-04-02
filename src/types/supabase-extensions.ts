@@ -15,7 +15,7 @@ export interface RolePrivilege {
   updated_at: string;
 }
 
-// Extend the Database type with our additional tables using declaration merging
+// Use declaration merging to extend the existing Database type
 declare module '@/integrations/supabase/types' {
   interface Database {
     public: {

@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const ShareTestimonial = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
   
   const [formData, setFormData] = React.useState({
     title: "",
@@ -50,7 +50,7 @@ const ShareTestimonial = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
-        {user ? (
+        {currentUser ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="title" className="text-sm font-medium">
