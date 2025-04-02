@@ -1,3 +1,4 @@
+// src/types/supabase-extensions.ts
 
 import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
 
