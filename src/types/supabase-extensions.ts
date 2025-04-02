@@ -1,6 +1,5 @@
 
-import { Database } from "@/integrations/supabase/types";
-import { User } from "@supabase/supabase-js";
+import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
 
 /**
  * Extended type definitions for tables not yet in the generated Supabase types
@@ -8,7 +7,7 @@ import { User } from "@supabase/supabase-js";
 
 export interface RolePrivilege {
   id: string;
-  role: Database["public"]["Enums"]["user_role"];
+  role: SupabaseDatabase["public"]["Enums"]["user_role"];
   privilege_name: string;
   privilege_description: string;
   active: boolean;
@@ -16,7 +15,7 @@ export interface RolePrivilege {
   updated_at: string;
 }
 
-// Extend the Database type with our additional tables
+// Extend the Database type with our additional tables using declaration merging
 declare module '@/integrations/supabase/types' {
   interface Database {
     public: {
@@ -27,7 +26,7 @@ declare module '@/integrations/supabase/types' {
           Update: Partial<Omit<RolePrivilege, 'id' | 'created_at' | 'updated_at'>>;
           Relationships: never[];
         };
-      } & Database["public"]["Tables"];
+      } & SupabaseDatabase["public"]["Tables"];
     }
   }
 }
