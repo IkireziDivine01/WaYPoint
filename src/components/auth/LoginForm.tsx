@@ -10,19 +10,22 @@ import { Eye, EyeOff, Loader } from "lucide-react";
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuth();
+  const { login, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
+    setIsSubmitting(true);
     
     // Simple validation
     if (!email.trim() || !password.trim()) {
       setFormError("All fields are required");
+      setIsSubmitting(false);
       return;
     }
     
@@ -36,8 +39,12 @@ const LoginForm = () => {
       } else {
         setFormError("An unexpected error occurred. Please try again.");
       }
+      setIsSubmitting(false);
     }
   };
+
+  // Use local isSubmitting state to control button loading state
+  const buttonIsLoading = isSubmitting;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md">
@@ -96,9 +103,9 @@ const LoginForm = () => {
       <Button 
         type="submit" 
         className="w-full h-12 text-base btn-primary"
-        disabled={isLoading}
+        disabled={buttonIsLoading}
       >
-        {isLoading ? (
+        {buttonIsLoading ? (
           <div className="flex items-center space-x-2">
             <Loader size={18} className="animate-spin" />
             <span>Signing in...</span>
