@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, User, LogIn, LogOut, BookOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useMobileScreen } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/navigation-menu";
 
 const Navbar = () => {
-  const { currentUser, signOut } = useAuth();
-  const { isMobile } = useMobileScreen();
+  const { currentUser, logout } = useAuth();
+  const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -33,8 +33,8 @@ const Navbar = () => {
     { name: "Dashboard", path: "/dashboard" },
     { name: "Assessment", path: "/assessment" },
     { name: "Courses", path: "/courses" },
-    { name: "Learning", path: "/learning" }, // Add Learning link
-    { name: "Blog", path: "/blog" }, // Add Blog link
+    { name: "Learning", path: "/learning" }, 
+    { name: "Blog", path: "/blog" }, 
   ];
 
   // Filter dashboard link if user is not logged in
@@ -65,14 +65,17 @@ const Navbar = () => {
             <NavigationMenuList>
               {visibleLinks.map((link) => (
                 <NavigationMenuItem key={link.name}>
-                  <Link to={link.path} legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={navigationMenuTriggerStyle()}
-                      active={location.pathname === link.path}
+                  <NavigationMenuLink 
+                    className={navigationMenuTriggerStyle()} 
+                    asChild
+                  >
+                    <Link 
+                      to={link.path}
+                      className={location.pathname === link.path ? "text-waypoint-blue" : ""}
                     >
                       {link.name}
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               ))}
             </NavigationMenuList>
@@ -116,7 +119,7 @@ const Navbar = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={signOut}
+                onClick={logout}
                 className="text-gray-600"
               >
                 <LogOut className="h-5 w-5" />
@@ -186,7 +189,7 @@ const Navbar = () => {
                       variant="ghost"
                       className="justify-start"
                       onClick={() => {
-                        signOut();
+                        logout();
                         closeMobileMenu();
                       }}
                     >
