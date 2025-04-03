@@ -43,13 +43,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Then set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("Auth state change event:", event);
-        if (session?.user) {
-          await fetchAndSetUserProfile(session.user.id);
-        } else {
-          setCurrentUser(null);
-        }
+        // Use setTimeout to avoid potential Supabase deadlocks
+        setTimeout(async () => {
+          if (session?.user) {
+            await fetchAndSetUserProfile(session.user.id);
+          } else {
+            setCurrentUser(null);
+          }
+        }, 0);
       }
     );
 
@@ -68,11 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       if (profileError) {
         console.error("Profile fetch error:", profileError);
-        throw profileError;
+        return;
       }
       
       if (profile) {
@@ -90,6 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         console.log("Setting user data:", userData);
         setCurrentUser(userData);
+      } else {
+        console.log("No profile found for user ID:", userId);
       }
     } catch (err) {
       console.error("Error fetching user profile:", err);
@@ -98,7 +103,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Login function
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     setError(null);
     
     try {
@@ -110,20 +114,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       // Profile data will be loaded by the auth state change handler
+      return data;
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred");
       }
-      setIsLoading(false);
       throw err;
     }
   };
 
   // Register function
   const register = async (username: string, email: string, password: string, role: UserRole) => {
-    setIsLoading(true);
     setError(null);
     
     try {
@@ -141,13 +144,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       // Profile will be created by the database trigger and loaded by the auth state change handler
+      return data;
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred");
       }
-      setIsLoading(false);
       throw err;
     }
   };
@@ -169,7 +172,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Update user profile
   const updateUserProfile = async (userData: Partial<User>) => {
-    setIsLoading(true);
     setError(null);
     
     try {
@@ -205,8 +207,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError("An unexpected error occurred");
       }
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -50,8 +50,8 @@ const LoginForm = () => {
     }
   };
 
-  // Use both local isSubmitting state and global authLoading state
-  const buttonIsLoading = isSubmitting || authLoading;
+  // Only use local isSubmitting state, not global authLoading
+  const buttonIsLoading = isSubmitting;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-md">
