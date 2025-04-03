@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Then set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state change event:", event);
         if (session?.user) {
           await fetchAndSetUserProfile(session.user.id);
         } else {
@@ -62,13 +63,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Helper function to fetch user profile data
   const fetchAndSetUserProfile = async (userId: string) => {
     try {
+      console.log("Fetching user profile for ID:", userId);
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
       
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        throw profileError;
+      }
       
       if (profile) {
         const { data: { user } } = await supabase.auth.getUser();
@@ -79,9 +84,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: user?.email || '',
           role: profile.role as UserRole,
           firstName: profile.first_name || undefined,
-          lastName: profile.last_name || undefined
+          lastName: profile.last_name || undefined,
+          avatar_url: profile.avatar_url || undefined
         };
         
+        console.log("Setting user data:", userData);
         setCurrentUser(userData);
       }
     } catch (err) {
@@ -176,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userData.firstName) profileData.first_name = userData.firstName;
       if (userData.lastName) profileData.last_name = userData.lastName;
       if (userData.role) profileData.role = userData.role;
+      if (userData.avatar_url) profileData.avatar_url = userData.avatar_url;
       
       // Update profile in Supabase
       const { error } = await supabase
@@ -224,5 +232,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-export { type User, type UserRole };

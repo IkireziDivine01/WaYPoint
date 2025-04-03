@@ -47,10 +47,12 @@ const RegisterForm = () => {
     }
     
     try {
+      console.log("Registering with:", { username, email, role });
       await register(username, email, password, role);
       toast.success("Account created successfully! Please check your email to confirm your account.");
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Registration error:", error);
       // Handle specific errors
       if (error?.message?.includes("already registered")) {
         setFormError("This email is already registered. Please use a different email or try logging in.");

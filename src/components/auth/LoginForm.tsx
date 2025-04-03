@@ -34,6 +34,7 @@ const LoginForm = () => {
       toast.success("Successfully logged in");
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Login error:", error);
       // Handle specific error cases
       if (error?.message?.includes("Email not confirmed")) {
         setFormError("Please check your email to confirm your account before logging in.");
